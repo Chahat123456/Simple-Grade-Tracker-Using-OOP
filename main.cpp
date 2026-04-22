@@ -1,8 +1,8 @@
 #include <iostream>
 #include <string>
+#include <fstream> // file handling
 using namespace std;
 
-// Abstraction
 class Person
 {
 protected:
@@ -16,23 +16,21 @@ public:
         age = a;
     }
 
-    virtual void show() = 0; // pure virtual
+    virtual void show() = 0;
 };
 
-// Inheritance
 class Student : public Person
 {
-    double score; // Partial Encapsulation
+    double score;
 
 public:
-    // constructor (also calls base class)
     Student(string n, int a, double s) : Person(n, a)
     {
         score = s;
     }
 
     void show()
-    { // Polymorphism
+    {
         string remark;
 
         if (score >= 90)
@@ -48,17 +46,39 @@ public:
              << " | Score:" << score
              << " | " << remark << endl;
     }
+
+    // NEW: write student to file
+    void saveToFile(ofstream &file)
+    {
+        file << name << "," << age << "," << score << endl;
+    }
 };
 
 int main()
 {
-    Student *list[10]; // using pointers to avoid default constructor issue
+    Student *list[10];
     int count = 0;
 
-    int choice;
     string name;
     int age;
     double score;
+    int choice;
+
+    // load data from existing file
+    ifstream inFile("students.txt");
+    if (inFile)
+    {
+        while (getline(inFile, name, ','))
+        {
+            inFile >> age;
+            inFile.ignore(); // skip comma
+            inFile >> score;
+            inFile.ignore(); // skip newline
+
+            list[count++] = new Student(name, age, score);
+        }
+        inFile.close();
+    }
 
     cout << "=== OOP Grade Tracker ===\n";
 
@@ -83,7 +103,15 @@ int main()
             cin >> score;
             cin.ignore();
 
-            list[count++] = new Student(name, age, score);
+            // create object
+            list[count] = new Student(name, age, score);
+
+            // append mode to save
+            ofstream outFile("students.txt", ios::app);
+            list[count]->saveToFile(outFile);
+            outFile.close();
+
+            count++;
         }
         else if (choice == 2)
         {
